@@ -11,21 +11,18 @@ import java.util.ArrayList;
  */
 public class ConwaysGameControl {
 
+    public static void main(String[] args){
+        new ConwaysGameControl();
+    }
+
     private ConwaysGameUI ui;
 
     private ConwaysGame game;
 
     private boolean inGame;
-    public boolean isInGame() {
-        return inGame;
-    }
-
     private boolean drawingGrid;
     private boolean infinite;
     private boolean paused;
-    public void togglePause(){
-        paused = !paused;
-    }
     private int width;
     private int height;
     private Thread gameThread;
@@ -35,12 +32,16 @@ public class ConwaysGameControl {
          ui = new ConwaysGameUI(this);
     }
 
-    public void drawGame(Graphics g){
-        game.drawGame(drawingGrid, width, height, g);
+    public boolean isInGame() {
+        return inGame;
     }
 
-    public static void main(String[] args){
-        new ConwaysGameControl();
+    public void togglePause(){
+        paused = !paused;
+    }
+
+    public void drawGame(Graphics g){
+        game.drawGame(drawingGrid, width, height, g);
     }
 
     public void init(){
@@ -63,6 +64,21 @@ public class ConwaysGameControl {
             game.setSurvivorQualifications(getListOfNumbers(ui.getModifizierteRegelnUeberlebenText()));
             game.setBirthQualifications(getListOfNumbers(ui.getModifizierteRegelnGeburtText()));
         }
+    }
+    private void init(boolean grid, boolean inf, int w, int h, int gw, int gh, int sl, double randomRate){
+        game = new ConwaysGame(w, h, gw, gh, randomRate);
+
+        drawingGrid = grid;
+        infinite = inf;
+        paused = false;
+        width = w;
+        height = h;
+        sleepTime = sl;
+
+        inGame = true;
+
+        gameThread = new Thread(new Timer());
+        gameThread.start();
     }
 
     private int[] getListOfNumbers(String text){
@@ -135,24 +151,6 @@ public class ConwaysGameControl {
         ui.setResumable(true);
         ui.repaint();
         inGame = false;
-    }
-
-    private void init(boolean grid, boolean inf, int w, int h, int gw, int gh, int sl, double randomRate){
-        game = new ConwaysGame(w, h, gw, gh, randomRate);
-
-        drawingGrid = grid;
-        infinite = inf;
-        paused = false;
-        width = w;
-        height = h;
-        sleepTime = sl;
-
-        inGame = true;
-
-        paused = true;
-
-        gameThread = new Thread(new Timer());
-        gameThread.start();
     }
 
     private void onTick(){

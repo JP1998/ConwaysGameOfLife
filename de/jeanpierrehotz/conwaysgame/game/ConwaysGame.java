@@ -8,28 +8,16 @@ import java.util.ArrayList;
  */
 public class ConwaysGame {
 
+    private static int OFFSET = 100;
+
+
+
     private boolean[][] field;
-
     private int size;
+    private int[] survivorQualifications;
+    private int[] birthQualifications;
 
-    private static int OFFSET = 200;
 
-    public void setAll(boolean stat){
-        for(int i = 0; i < field.length; i++){
-            for(int j = 0; j < field[i].length; j++){
-                field[i][j] = stat;
-            }
-        }
-    }
-
-    public void setFieldAtTo(int x, int y, boolean stat){
-        int xInd = OFFSET + (x / size);
-        int yInd = OFFSET + (y / size);
-
-//        System.out.println(xInd + "  " + yInd);
-
-        field[xInd][yInd] = stat;
-    }
 
     public ConwaysGame(int x, int y, int w, int h){
         this(x, y, w, h, 0.25);
@@ -43,11 +31,9 @@ public class ConwaysGame {
 //            }
 //        }
     }
-
     public ConwaysGame(int x, int y, int w, int h, double ratio){
         this(x, y, w, h, ratio, new int[]{2, 3}, new int[]{3});
     }
-
     public ConwaysGame(int x, int y, int w, int h, double ratio, int[] survivor, int[] birth){
         int realW = x / w;
         int realH = y / h;
@@ -71,6 +57,59 @@ public class ConwaysGame {
         setBirthQualifications(birth);
     }
 
+
+
+    public void setAll(boolean stat){
+        for(int i = 0; i < field.length; i++){
+            for(int j = 0; j < field[i].length; j++){
+                field[i][j] = stat;
+            }
+        }
+    }
+    public void setFieldAtTo(int x, int y, boolean stat){
+        int xInd = OFFSET + (x / size);
+        int yInd = OFFSET + (y / size);
+
+//        System.out.println(xInd + "  " + yInd);
+
+        field[xInd][yInd] = stat;
+    }
+    public void setSurvivorQualifications(int[] survivor){
+        ArrayList<Integer> temp = new ArrayList<>();
+
+        for(int i = 0; i < survivor.length; i++){
+            if(survivor[i] >= 0 && survivor[i] <= 8 && !temp.contains(survivor[i])){
+                temp.add(survivor[i]);
+            }
+        }
+
+        survivorQualifications = new int[temp.size()];
+
+        for(int i = 0; i < temp.size(); i++){
+            survivorQualifications[i] = temp.get(i);
+        }
+    }
+    public void setBirthQualifications(int[] birth){
+        ArrayList<Integer> temp = new ArrayList<>();
+
+        for(int i = 0; i < birth.length; i++){
+            if(birth[i] >= 0 && birth[i] <= 8 && !temp.contains(birth[i])){
+                temp.add(birth[i]);
+            }
+        }
+
+        birthQualifications = new int[temp.size()];
+
+        for(int i = 0; i < temp.size(); i++){
+            birthQualifications[i] = temp.get(i);
+        }
+    }
+
+
+
+    public void aktualisiereFeld(boolean infinite){
+        field = neuesFeld(infinite);
+    }
     public void drawGame(boolean drawGrid, int x, int y, Graphics g){
         Color tempCol = g.getColor();
         g.setColor(Color.WHITE);
@@ -89,58 +128,29 @@ public class ConwaysGame {
 
         g.setColor(Color.BLACK);
 
-        for(int i = OFFSET; i < field.length - /*2 **/ OFFSET; i++)
-            for(int j = OFFSET; j < field[i].length - /*2 **/ OFFSET; j++)
+        for(int i = OFFSET; i < field.length - OFFSET; i++)
+            for(int j = OFFSET; j < field[i].length - OFFSET; j++)
                 if(field[i][j])
-                    g.fillRect((i - OFFSET) * size /*+ 30*/, (j - OFFSET) * size /*+ 30*/, size, size);
+                    g.fillRect((i - OFFSET) * size, (j - OFFSET) * size, size, size);
 
         g.setColor(tempCol);
-//        System.out.println(field.length + "|" + field[0].length);
     }
 
-    public void aktualisiereFeld(boolean infinite){
-        field = neuesFeld(infinite);
-    }
+
 
     private boolean[][] neuesFeld(boolean infinite){
         boolean[][] newField = new boolean[field.length][field[0].length];
 
-/*
-        for(boolean[] col: field){
-            System.out.print("|");
-            for(boolean f: col){
-                System.out.print((f)? "X|": " |");
-            }
-            System.out.println();
-        }
-        System.out.println("__________________________________________________");
-*/
-
-
         for(int i = 0; i < field.length; i++){
-//            System.out.print("|");
             for(int j = 0; j < field[i].length; j++){
                 int living = getLivingNeighbors(i, j, infinite);
-//                System.out.print(living + "|");
 
                 newField[i][j] = ( field[i][j] && livingCellSurvives(living) ) || ( !field[i][j] && deadCellBorn(living) );
-                        //( field[i][j] && ( living == 2 || living == 3 ) ) || ( !field[i][j] && living == 3 );
             }
-//            System.out.println();
         }
-//        System.out.println("__________________________________________________");
-//        for(boolean[] col: newField){
-//            System.out.print("|");
-//            for(boolean f: col){
-//                System.out.print((f)? "X|": " |");
-//            }
-//            System.out.println();
-//        }
-
 
         return newField;
     }
-
     private boolean livingCellSurvives(int ctr){
         for(int i = 0; i < survivorQualifications.length; i++){
             if(survivorQualifications[i] == ctr){
@@ -150,7 +160,6 @@ public class ConwaysGame {
 
         return false;
     }
-
     private boolean deadCellBorn(int ctr){
         for(int i = 0; i < birthQualifications.length; i++){
             if(birthQualifications[i] == ctr){
@@ -159,42 +168,6 @@ public class ConwaysGame {
         }
         return false;
     }
-
-    private int[] survivorQualifications;
-    private int[] birthQualifications;
-
-    public void setSurvivorQualifications(int[] survivor){
-        ArrayList<Integer> temp = new ArrayList<>();
-
-        for(int i = 0; i < survivor.length; i++){
-            if(survivor[i] >= 0 && survivor[i] <= 8 && !temp.contains(survivor[i])){
-                temp.add(survivor[i]);
-            }
-        }
-
-        survivorQualifications = new int[temp.size()];
-
-        for(int i = 0; i < temp.size(); i++){
-            survivorQualifications[i] = temp.get(i);
-        }
-    }
-
-    public void setBirthQualifications(int[] birth){
-        ArrayList<Integer> temp = new ArrayList<>();
-
-        for(int i = 0; i < birth.length; i++){
-            if(birth[i] >= 0 && birth[i] <= 8 && !temp.contains(birth[i])){
-                temp.add(birth[i]);
-            }
-        }
-
-        birthQualifications = new int[temp.size()];
-
-        for(int i = 0; i < temp.size(); i++){
-            birthQualifications[i] = temp.get(i);
-        }
-    }
-
     private int getLivingNeighbors(int x, int y, boolean infinite){
         int ctr = 0;
 
