@@ -4,6 +4,7 @@ import de.jeanpierrehotz.conwaysgame.game.ConwaysGame;
 import de.jeanpierrehotz.conwaysgame.ui.ConwaysGameUI;
 
 import java.awt.*;
+import java.util.ArrayList;
 
 /**
  * Created by Admin on 16.04.2016.
@@ -51,12 +52,65 @@ public class ConwaysGameControl {
                 ui.getHeight(),
                 ui.getSpalten(),
                 ui.getZeilen(),
-                ui.getAktualisierungsZeit()
+                ui.getAktualisierungsZeit(),
+                (ui.shouldBeMdifizierteZufallsRate())? ui.getModifizierteZufallsRate(): 0.25
         );
+
+        if(ui.shouldBeKopierWelt()){
+            game.setSurvivorQualifications(new int[]{1, 3, 5, 7});
+            game.setBirthQualifications(new int[]{1, 3, 5, 7});
+        }else if(ui.shouldBeModifizierteRegeln()){
+            game.setSurvivorQualifications(getListOfNumbers(ui.getModifizierteRegelnUeberlebenText()));
+            game.setBirthQualifications(getListOfNumbers(ui.getModifizierteRegelnGeburtText()));
+        }
+    }
+
+    private int[] getListOfNumbers(String text){
+        String[] temp = text.split(",");
+        ArrayList<Integer> tempIntegerList = new ArrayList<>();
+
+
+        for(int i = 0; i < temp.length; i++){
+            temp[i] = temp[i].trim();
+            try{
+                int tempNum = Integer.parseInt(temp[i]);
+                tempIntegerList.add(tempNum);
+            }catch (Exception exc){}
+        }
+
+        int[] resultingList = new int[tempIntegerList.size()];
+        for(int i = 0; i < tempIntegerList.size(); i++){
+            resultingList[i] = tempIntegerList.get(i);
+        }
+
+        return resultingList;
     }
 
     public void resumeGame(){
         ui.showGame();
+
+        inGame = true;
+
+        gameThread = new Thread(new Timer());
+        gameThread.start();
+
+        ui.repaint();
+    }
+
+    public void saveAndResumeGame(){
+        ui.showGame();
+
+        drawingGrid = ui.shouldShowGridLines();
+        infinite = ui.shouldBeInfinite();
+        sleepTime = ui.getAktualisierungsZeit();
+
+        if(ui.shouldBeKopierWelt()){
+            game.setSurvivorQualifications(new int[]{1, 3, 5, 7});
+            game.setBirthQualifications(new int[]{1, 3, 5, 7});
+        }else if(ui.shouldBeModifizierteRegeln()){
+            game.setSurvivorQualifications(getListOfNumbers(ui.getModifizierteRegelnUeberlebenText()));
+            game.setBirthQualifications(getListOfNumbers(ui.getModifizierteRegelnGeburtText()));
+        }
 
         inGame = true;
 
@@ -83,8 +137,8 @@ public class ConwaysGameControl {
         inGame = false;
     }
 
-    private void init(boolean grid, boolean inf, int w, int h, int gw, int gh, int sl){
-        game = new ConwaysGame(w, h, gw, gh, 0.25);
+    private void init(boolean grid, boolean inf, int w, int h, int gw, int gh, int sl, double randomRate){
+        game = new ConwaysGame(w, h, gw, gh, randomRate);
 
         drawingGrid = grid;
         infinite = inf;
@@ -94,6 +148,8 @@ public class ConwaysGameControl {
         sleepTime = sl;
 
         inGame = true;
+
+        paused = true;
 
         gameThread = new Thread(new Timer());
         gameThread.start();
@@ -118,6 +174,7 @@ public class ConwaysGameControl {
             }
         }
     }
+
     public void disposeThread(){
         gameThread = null;
     }
