@@ -211,6 +211,7 @@ public class ConwaysGameUI extends Frame{
     };
 
 
+
     /**
      * Dieser Konstruktor erstellt eine UI für ein Conways Game of life, die die gegebene
      * ConwaysGameControl als Steuerung benutzt.
@@ -230,6 +231,7 @@ public class ConwaysGameUI extends Frame{
         addKeyListener(steuerungsKeyListener);
         addMouseListener(steuerungsMouseListener);
         addMouseMotionListener(steuerungsMouseMotionListener);
+
 
 //        TODO: Für Aufnahme zuständig.
 //        Wir suchen, wie viele Aufnahmen in dem Ordner bisher gemacht wurden, und diese werden gespeichert
@@ -335,7 +337,7 @@ public class ConwaysGameUI extends Frame{
         setSize(1600, 900);
         setVisible(true);
 
-        centerComponents();
+        refreshLayout();
 
         setResumable(false);
     }
@@ -391,56 +393,102 @@ public class ConwaysGameUI extends Frame{
     }
 
     /**
-     * TODO:
-     * @return
+     * Diese Methode gibt ihnen an, ob die erstellte Welt mit modifizierten Regeln gespielt werden soll
+     * @return Ob die erstellte Welt mit modifizierten Regeln gespielt werden soll.
      */
     public boolean shouldBeModifizierteRegeln(){
         return modifizierteRegelnCheckbox.getState();
     }
+
+    /**
+     * Diese Methode gibt ihnen die vom User eingegebenen Anzahlen an lebenden Nachbarn, damit eine Zelle weiter lebt
+     * als den eingegebenen Text.
+     * Dieser sollte einige Zahlen enthalten, die jeweils mindestens mit einem Komma, und evtl. mit einigen Leerzeichen
+     * voneinander abgetrennt sind.
+     * Es wird nur garantiert, dass dieser String nicht null ist. Ansonsten ist (sollte allerdings nicht) jeglicher Inhalt möglich.
+     * @return  die vom User eingegebenen Anzahlen an lebenden Nachbarn, damit eine Zelle weiter lebt in Form von Text
+     */
     public String getModifizierteRegelnUeberlebenText(){
         return modifizierteRegelnUeberlebenTF.getText();
     }
+
+    /**
+     * Diese Methode gibt ihnen die vom User eingegebenen Anzahlen an lebenden Nachbarn, damit eine Zelle geboren wird
+     * als den eingegebenen Text.
+     * Dieser sollte einige Zahlen enthalten, die jeweils mindestens mit einem Komma, und evtl. mit einigen Leerzeichen
+     * voneinander abgetrennt sind.
+     * Es wird nur garantiert, dass dieser String nicht null ist. Ansonsten ist (sollte allerdings nicht) jeglicher Inhalt möglich.
+     * @return  die vom User eingegebenen Anzahlen an lebenden Nachbarn, damit eine Zelle geboren wird in Form von Text
+     */
     public String getModifizierteRegelnGeburtText(){
         return modifizierteRegelnGeburtTF.getText();
     }
+
+    /**
+     * Diese Methode gibt ihnen an, ob eine modifizierte Zufallsrate genutzt werden soll.
+     * @return  ob eine modifizierte Zufallsrate genutzt werden soll
+     */
     public boolean shouldBeMdifizierteZufallsRate(){
         return modifizierteZufallsRateCheckbox.getState();
     }
+
+    /**
+     * Diese Methode gibt ihnen die eingestellte Zufallsrate an. Diese ist in dem Intervall [0 .. 1], und
+     * gibt an mit welcher Wahrscheinlichkeit eine Zelle lebendig sein soll.
+     * @return  die derzeit eingestellte Zufallsrate
+     */
     public double getModifizierteZufallsRate(){
         return 1d - ((double) modifizierteZufallsRateScrollbar.getValue() / 1000d);
     }
 
+    /**
+     * Diese Methode lässt di UI wissen, ob das Spiel wieder aufnehmbar ist, und somit, ob die Resume-Buttons
+     * klickbar sein sollen.
+     * @param res   Ob das Spiel wieder aufnehmbar ist
+     */
     public void setResumable(boolean res){
         resumeGameBtn.setEnabled(res);
         saveAndResumeBtn.setEnabled(res);
     }
 
 
-
+    /**
+     * Diese Methode soll informiert werden, sobald ein Feld in dem Spiel modifiziert werden soll.
+     * Dies ist immer mit einem MouseEvent verbunden, da dies nur über einen Mausklick, oder ein Maus-Drag
+     * möglich ist.
+     * @param mouseEvent    Das mit der Aktion assoziierte MouseEvent
+     */
     private void fireEditingEvent(MouseEvent mouseEvent){
+//      Zuerst stellen wir sicher, dass wir in einem Spiel sind, und nicht beide Maustasten
+//      gleichzeitig gedrückt sind
         if((leftMousePressed ^ rightMousePressed) && control.isInGame()){
-//                System.out.println("asjdflasjda");
+//          Falls CTRL / Strg gedrückt ist
             if(ctrlPressed){
-//                    if(leftMousePressed){
-////                      alle auf 1
-//                        control.setAllTo(true);
-//                    }else{
-////                      alle auf 0
-//
-//                    }
-//                    System.out.println("all " + leftMousePressed);
+//              modifizieren wir das gesamte Spiel
                 control.setAllTo(leftMousePressed);
             }else{
-//                    if(leftMousePressed){
-////                      an pos auf 1
-//                    }else{
-////                      an pos auf 0
-//                    }
-//                    System.out.println("one " + leftMousePressed);
+//              ansonsten nur das Feld an der Stelle des Mauscursors
                 control.setFieldTo(mouseEvent.getX(), mouseEvent.getY(), leftMousePressed);
             }
+            /*
+
+            Dabei ist folgendes zu beachten:
+             - es sind nur folgende Zustände möglich
+             _____________________________
+            |                 | 1.  | 2.  |
+            |leftMousePressed | 1   | 0   |
+            |rightMousePressed| 0   | 1   |
+
+            Dabei wird das Feld bei 1. auf true und bei 2. auf false gesetzt
+             -> leftMousePressed kann als Status genutzt werden
+
+             */
         }
     }
+
+    /**
+     * Diese Methode blendet die UI aus, damit das Spiel sichtbar ist
+     */
     public void showGame(){
         captionLabel.setVisible(false);
         messageLabel.setVisible(false);
@@ -470,6 +518,12 @@ public class ConwaysGameUI extends Frame{
         modifizierteRegelnGeburtLabel.setVisible(false);
         modifizierteRegelnGeburtTF.setVisible(false);
     }
+
+    /**
+     * Diese Methode blendet die UI wieder ein, und lässt dem User die gegebene
+     * Nachricht anzeigen.
+     * @param msg   Die Nachricht, die dem User angezeigt werden soll.
+     */
     public void showUI(String msg){
         captionLabel.setVisible(true);
         messageLabel.setVisible(true);
@@ -501,18 +555,23 @@ public class ConwaysGameUI extends Frame{
 
         messageLabel.setText(msg);
     }
-    private void centerComponents(){
+
+    /**
+     * Diese Methode ordnet das Layout der UI an
+     */
+    private void refreshLayout(){
+        /*
+        Alle zentrierten Komponenten:
+         */
         captionLabel                        .setBounds(0, 50, getWidth(), 60);
         messageLabel                        .setBounds(0, 110, getWidth(), 20);
         aktualisierungsZeitLabel            .setBounds((getWidth() / 2) - 200, 140, 120, 20);
         aktualisierungsZeitScrollbar        .setBounds((getWidth() / 2) - 60, 140, 260, 20);
         aktualisierungsZeitAnzeigeLabel     .setBounds((getWidth() / 2) + 210, 140, 120, 20);
-
         modifizierteZufallsRateCheckbox     .setBounds((getWidth() / 2) - 260, 170, 800, 20);
         modifizierteZufallsRateLabel        .setBounds((getWidth() / 2) - 200, 200, 120, 20);
         modifizierteZufallsRateScrollbar    .setBounds((getWidth() / 2) - 60, 200, 260, 20);
         modifizierteZufallsRateAnzeigeLabel .setBounds((getWidth() / 2) + 210, 200, 120, 20);
-
         spaltenLabel                        .setBounds((getWidth() / 2) - 255, 230, 120, 20);
         spaltenChoice                       .setBounds((getWidth() / 2) - 125, 230, 120, 20);
         zeilenLabel                         .setBounds((getWidth() / 2) + 5, 230, 120, 20);
@@ -522,6 +581,9 @@ public class ConwaysGameUI extends Frame{
         startGameBtn                        .setBounds((getWidth() / 2) - 120, 330, 240, 60);
         resumeGameBtn                       .setBounds((getWidth() / 2) - 80, 400, 160, 30);
         saveAndResumeBtn                    .setBounds((getWidth() / 2) - 100, 440, 200, 30);
+        /*
+        Alle Komponenten in der linken unteren Ecke:
+         */
         kopierWeltCheckbox                  .setBounds(20, getHeight() - 120, 1000, 20);
         modifizierteRegelnCheckbox          .setBounds(20, getHeight() - 90, 1000, 20);
         modifizierteRegelnUeberlebenLabel   .setBounds(40, getHeight() - 60, 200, 20);
